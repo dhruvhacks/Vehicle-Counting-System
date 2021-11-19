@@ -4,8 +4,11 @@
 ## Instructions to run the project and replicate the results
 #### 1. Create a virtual environment
 ```
-$ virtualenv -p python3.6 venv
+$ virtualenv -p python3 venv
 ```
+If ```virtualenv``` is not installed on your system, it is recommended to use pip for the same. <br>
+(```$ pip install virtualenv```)
+ 
 #### 2. Activate the virtualenv and install the project ```requirements```
 For Ubuntu/MacOS-
 ```
@@ -14,7 +17,7 @@ $ pip install -r requirements.txt
 ```
 For Windows OS-
 ```
-source ./venv/bin/activate.bat
+venv\Scripts\activate
 pip install -r requirements.txt
 ```
 
