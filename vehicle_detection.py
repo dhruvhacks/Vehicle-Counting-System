@@ -53,6 +53,10 @@ class vehicle_detection(object):
         This method draws the bounding box on the frame at given
         locaiton.
         """
+        x, y, w, h = box_cord
+        cv2.rectangle(frame, (x,y), (x+w,y+h), (0, 255, 0), 2)
+        if draw_contour:
+            cv2.drawContours(frame, contour,-1,(255,0,0),3)
 
 
     def detect_motion(self, prev_frame, frame):
