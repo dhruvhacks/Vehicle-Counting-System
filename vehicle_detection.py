@@ -2,6 +2,12 @@ import cv2
 
 
 class vehicle_detection(object):
+	def __init__(self, STREAM_URL, skip_steps=15):
+        self.cam = cv2.VideoCapture(STREAM_URL)
+        self.frame = None
+        self.skip_steps = skip_steps
+
+        
     def __init__(self, STREAM_URL, skip_steps=15):
         """
         > a frame-stream object
@@ -19,6 +25,18 @@ class vehicle_detection(object):
         Function to read the frames from the stream-object
         created as a class-member.
         """
+        frame = None
+        fail_count = 0
+        while True:
+            frame = self.cam.read()[1]
+            if frame is None:
+                fail_count += 1
+                if fail_count == 100:
+                    print("Failed to read the frames multiple times")
+                    break
+                continue
+            break
+        self.frame = frame
 
 
     def pre_process_frame(self):
@@ -26,7 +44,9 @@ class vehicle_detection(object):
         This method applies all the pre-processing steps on the
         frame required for optimum performance.
         """
-
+		gray = cv2.cvtColor(self.frame, cv2.COLOR_BGR2GRAY)
+        blurred = cv2.GaussianBlur(gray, (21, 21), 0)
+        return blurred
 
     def draw_bounding_Box(self, frame, contour, box_cord, draw_contour=False):
         """
