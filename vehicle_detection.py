@@ -96,5 +96,6 @@ class vehicle_detection(object):
 
 
 if __name__ == "__main__":
-    vehicle_detection_obj = vehicle_detection(STREAM_URL="./data/3.mp4", skip_steps=15)
+    vehicle_detection_obj = vehicle_detection(STREAM_URL="./data/3.mp4",
+                                              skip_steps=15)
     vehicle_detection_obj.runner()
