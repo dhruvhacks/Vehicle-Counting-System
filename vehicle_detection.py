@@ -9,9 +9,27 @@ class vehicle_detection(object):
         > skip_steps to take snapshots at certain steps to
           detect motion.
         """
-        self.cam = cv2.VideoCapture(STREAM_URL)
+        self.STREAM_URL = STREAM_URL
+        self.cam = cv2.VideoCapture(self.STREAM_URL)
         self.frame = None
         self.skip_steps = skip_steps
+        self.crop_cord = [1, 1, 100000, 100000]
+
+
+    def region_selector(self, event, x, y, flags, param):
+        if event == cv2.EVENT_LBUTTONDOWN:
+            if self.first_click:
+                self.box_builder[0] = x
+                self.box_builder[1] = y
+                self.first_click = False
+        elif event == cv2.EVENT_LBUTTONUP:
+            self.box_builder[2] = x
+            self.box_builder[3] = y
+            self.first_click = True
+            cv2.rectangle(self.frame, (self.box_builder[0], self.box_builder[1]), (x, y), (0, 255, 0), 2)
+        if not self.first_click:
+            self.get_frame()
+            cv2.rectangle(self.frame, (self.box_builder[0], self.box_builder[1]), (x, y), (255, 0, 0), 2)
 
 
     def get_frame(self):
@@ -31,6 +49,22 @@ class vehicle_detection(object):
                 continue
             break
         self.frame = frame
+
+
+    def configure(self, region_selection=True, create_bg=False):
+        if region_selection:
+            self.first_click = True
+            self.box_builder = self.crop_cord.copy()
+            self.get_frame()
+            cv2.namedWindow("region_selector")
+            cv2.setMouseCallback('region_selector', self.region_selector)
+            while True:
+                cv2.imshow("region_selector", self.frame)
+                if cv2.waitKey(1) == ord('q'):
+                    break
+            self.cam = cv2.VideoCapture(self.STREAM_URL)
+            self.crop_cord = self.box_builder.copy()
+            cv2.destroyAllWindows()
 
 
     def pre_process_frame(self):
@@ -98,4 +132,5 @@ class vehicle_detection(object):
 if __name__ == "__main__":
     vehicle_detection_obj = vehicle_detection(STREAM_URL="./data/3.mp4",
                                               skip_steps=15)
+    vehicle_detection_obj.configure(True, False)
     vehicle_detection_obj.runner()
