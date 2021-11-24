@@ -2,7 +2,7 @@ import cv2
 
 
 class vehicle_detection(object):
-    def __init__(self, STREAM_URL, skip_steps=15):
+    def __init__(self, STREAM_URL, skip_steps=15, modified=False):
         """
         > a frame-stream object
         > frame object- keeping it central to entire class
@@ -35,6 +35,7 @@ class vehicle_detection(object):
         if not self.first_click:
             self.get_frame()
             cv2.rectangle(self.frame, (self.box_builder[0], self.box_builder[1]), (x, y), (255, 0, 0), 2)
+        self.modified = modified
 
 
     def get_frame(self):
@@ -86,8 +87,18 @@ class vehicle_detection(object):
         frame required for optimum performance.
         """
         gray = cv2.cvtColor(self.frame, cv2.COLOR_BGR2GRAY)
-        blurred = cv2.GaussianBlur(gray, (21, 21), 0)
-        return blurred
+        bilateral = cv2.bilateralFilter(gray, 15, 75, 75)
+        
+        #blurred = cv2.GaussianBlur(gray, (21, 21), 0)
+        if self.modified == True:
+            pass
+        else:
+            sobel_x = cv2.Sobel(bilateral,cv2.CV_8U,1,0,ksize=3)
+            sobel_y = cv2.Sobel(bilateral,cv2.CV_8U,0,1,ksize=3)
+
+            sobel = cv2.addWeighted(sobel_x,0.5,sobel_y,0.5,0)
+        
+        return sobel
 
 
     def draw_bounding_Box(self, frame, contour, box_cord, draw_contour=False):
