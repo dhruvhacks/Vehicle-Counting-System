@@ -48,7 +48,8 @@ class vehicle_detection(object):
                     break
                 continue
             break
-        self.frame = frame
+        self.frame = frame[min(self.crop_cord[1], self.crop_cord[3]):max(self.crop_cord[1], self.crop_cord[3]),
+                           min(self.crop_cord[0], self.crop_cord[2]):max(self.crop_cord[0], self.crop_cord[2])]
 
 
     def configure(self, region_selection=True, create_bg=False):
@@ -58,8 +59,10 @@ class vehicle_detection(object):
             self.get_frame()
             cv2.namedWindow("region_selector")
             cv2.setMouseCallback('region_selector', self.region_selector)
+            text = "(config_mode) Drag mouse to define ROI and press q when complete"
             while True:
                 cv2.imshow("region_selector", self.frame)
+                cv2.putText(self.frame, text, (0,50), cv2.FONT_HERSHEY_SIMPLEX, 1, (255,0,0), 2)
                 if cv2.waitKey(1) == ord('q'):
                     break
             self.cam = cv2.VideoCapture(self.STREAM_URL)
@@ -75,6 +78,7 @@ class vehicle_detection(object):
         gray = cv2.cvtColor(self.frame, cv2.COLOR_BGR2GRAY)
         blurred = cv2.GaussianBlur(gray, (21, 21), 0)
         return blurred
+
 
     def draw_bounding_Box(self, frame, contour, box_cord, draw_contour=False):
         """
