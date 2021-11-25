@@ -17,6 +17,11 @@ class vehicle_detection(object):
 
 
     def region_selector(self, event, x, y, flags, param):
+        """
+        Callback function to be triggered by cv2.setMouseCallback
+        This function allows creation of box over frame by dragging
+        the pointer with left-button pressed.
+        """
         if event == cv2.EVENT_LBUTTONDOWN:
             if self.first_click:
                 self.box_builder[0] = x
@@ -53,6 +58,11 @@ class vehicle_detection(object):
 
 
     def configure(self, region_selection=True, create_bg=False):
+        """
+        This method is executed before running the project in full capacity.
+        Here, we can define a specific region as ROI for vehicle detection and
+        also specify the mode of operation- with prev_frames or specified background
+        """
         if region_selection:
             self.first_click = True
             self.box_builder = self.crop_cord.copy()
