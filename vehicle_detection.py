@@ -1,7 +1,7 @@
 import cv2
 import numpy as np
 
-
+#%%
 class vehicle_detection(object):
     def __init__(self, STREAM_URL, skip_steps=15, gamma=0.4, binary_threshold = 25, replicate=False):
         """
@@ -40,7 +40,7 @@ class vehicle_detection(object):
             self.get_frame()
             cv2.rectangle(self.frame, (self.box_builder[0], self.box_builder[1]), (x, y), (255, 0, 0), 2)
 
-
+#%%
     def get_frame(self):
         """
         Function to read the frames from the stream-object
@@ -83,6 +83,7 @@ class vehicle_detection(object):
             self.crop_cord = self.box_builder.copy()
             cv2.destroyAllWindows()
 
+#%%
 
     def pre_process_frame(self):
         """
@@ -113,7 +114,7 @@ class vehicle_detection(object):
         if draw_contour:
             cv2.drawContours(frame, contour,-1,(255,0,0),3)
 
-
+#%%
     def detect_motion(self, prev_frame, frame):
         """
         This is the primary method to detect the motion between a old
@@ -134,7 +135,7 @@ class vehicle_detection(object):
                 continue
         cv2.imshow("Boxed frame", self.frame)
 
-
+#%%
     def runner(self):
         """
         Primary runner function to perform vehicle detection on Video Stream
