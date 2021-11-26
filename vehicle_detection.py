@@ -3,7 +3,7 @@ import numpy as np
 
 
 class vehicle_detection(object):
-    def __init__(self, STREAM_URL, skip_steps=15, gamma=0.4, modified=False):
+    def __init__(self, STREAM_URL, skip_steps=15, gamma=0.4, binary_threshold = 25, modified=False):
         """
         > a frame-stream object
         > frame object- keeping it central to entire class
@@ -38,6 +38,7 @@ class vehicle_detection(object):
             cv2.rectangle(self.frame, (self.box_builder[0], self.box_builder[1]), (x, y), (255, 0, 0), 2)
         self.modified = modified
         self.gamma = gamma
+        self.threshold = binary_threshold
         
 
     def get_frame(self):
@@ -100,7 +101,8 @@ class vehicle_detection(object):
             sobel_x = cv2.Sobel(result,cv2.CV_8U,1,0,ksize=3)
             sobel_y = cv2.Sobel(result,cv2.CV_8U,0,1,ksize=3)
             result = cv2.addWeighted(sobel_x,0.5,sobel_y,0.5,0)
-        return result
+        # Applying Threshold to Binarize...
+        return cv2.threshold(result, self.threshold, 255, cv2.THRESH_BINARY)[1]
 
 
 
