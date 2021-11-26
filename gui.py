@@ -1,11 +1,15 @@
 import tkinter as tk
 import vehicle_detection as vhd
-
+vehicle_det_obj = None
 def startDetection():
-    vehicle_det_obj = vhd.vehicle_detection(STREAM_URL="./data/{clip}.mp4".format(clip=selectClip.get()), skip_steps=skip_steps.get())
-    vehicle_det_obj.configure(True, create_bg.get())
-    vehicle_det_obj.runner()
+    global vehicle_det_obj
 
+    vehicle_det_obj.runner()
+def config():
+    global vehicle_det_obj
+    vehicle_det_obj = vhd.vehicle_detection(STREAM_URL="./data/{clip}.mp4".format(clip=selectClip.get()),
+                                            skip_steps=skip_steps.get())
+    vehicle_det_obj.configure(True, create_bg.get())
 m=tk.Tk(className='Vehicle Counter')
 
 rw = 0
@@ -41,8 +45,11 @@ threshold= tk.Scale(m, from_=0, to=255, orient=tk.HORIZONTAL)
 threshold.grid(row=rw,column = 1)
 rw+=1
 
+startButton = tk.Button(m,activebackground= '#0f0', text='Config', width=25,command = config)#command
+startButton.grid(row=rw,column=0)
+
 startButton = tk.Button(m,activebackground= '#0f0', text='Start', width=25,command = startDetection)#command
-startButton.grid(row=rw)
+startButton.grid(row=rw,column=5)
 rw+=1
 
 m.mainloop()
