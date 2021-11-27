@@ -13,7 +13,7 @@ def config():
 m=tk.Tk(className='Vehicle Counter')
 
 rw = 0
-tk.Label(text='Create Dynamic Background : ').grid(row=rw)
+tk.Label(text='Clip Selection : ').grid(row=rw,column=0)
 selectClip = tk.IntVar()
 tk.Radiobutton(m, text='Clip 1' , variable=selectClip, value=1).grid(row=rw,column = 1)
 tk.Radiobutton(m, text='Clip 2' , variable=selectClip, value=2).grid(row=rw,column = 2)
@@ -22,7 +22,7 @@ tk.Radiobutton(m, text='Clip 4' , variable=selectClip, value=4).grid(row=rw,colu
 tk.Radiobutton(m, text='Clip 5' , variable=selectClip, value=5).grid(row=rw,column = 5)
 rw+=1
 
-tk.Label(text='Clip Selection : ').grid(row=rw,column=0)
+tk.Label(text='Create Dynamic Background : ').grid(row=rw)
 create_bg = tk.BooleanVar()
 tk.Radiobutton(m, text='True' , variable=create_bg, value=True).grid(row=rw,column = 1)
 tk.Radiobutton(m, text='False', variable=create_bg, value=False).grid(row=rw,column = 2)
