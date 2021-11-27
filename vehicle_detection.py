@@ -15,7 +15,7 @@ class vehicle_detection(object):
         self.frame = None
         self.skip_steps = skip_steps
         self.crop_cord = [1, 1, 100000, 100000]
-        self.modified = modified
+        self.replicate = replicate
         self.gamma = gamma
         self.threshold = binary_threshold
 
@@ -90,7 +90,7 @@ class vehicle_detection(object):
         frame required for optimum performance.
         """
         gray = cv2.cvtColor(self.frame, cv2.COLOR_BGR2GRAY)
-        result = cv2.bilateralFilter(gamma, 15, 75, 75)
+        result = cv2.bilateralFilter(gray, 15, 75, 75)
         # result = cv2.GaussianBlur(gray, (21, 21), 0)
         if self.replicate:
             gamma = np.power(255.0,1-self.gamma)
