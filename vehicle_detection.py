@@ -1,8 +1,9 @@
 import cv2
+import numpy as np
 
 
 class vehicle_detection(object):
-    def __init__(self, STREAM_URL, skip_steps=15):
+    def __init__(self, STREAM_URL, skip_steps=15, gamma=0.4, binary_threshold = 25, replicate=False):
         """
         > a frame-stream object
         > frame object- keeping it central to entire class
@@ -14,6 +15,9 @@ class vehicle_detection(object):
         self.frame = None
         self.skip_steps = skip_steps
         self.crop_cord = [1, 1, 100000, 100000]
+        self.replicate = replicate
+        self.gamma = gamma
+        self.threshold = binary_threshold
 
 
     def region_selector(self, event, x, y, flags, param):
@@ -86,8 +90,17 @@ class vehicle_detection(object):
         frame required for optimum performance.
         """
         gray = cv2.cvtColor(self.frame, cv2.COLOR_BGR2GRAY)
-        blurred = cv2.GaussianBlur(gray, (21, 21), 0)
-        return blurred
+        result = cv2.bilateralFilter(gray, 15, 75, 75)
+        # result = cv2.GaussianBlur(gray, (21, 21), 0)
+        if self.replicate:
+            gamma = np.power(255.0,1-self.gamma)
+            gamma = np.float64(gamma)*result**(np.float64(self.gamma))
+            gamma = np.uint8(gamma)
+            sobel_x = cv2.Sobel(result, cv2.CV_8U, 1, 0, ksize=3)
+            sobel_y = cv2.Sobel(result, cv2.CV_8U, 0, 1, ksize=3)
+            result = cv2.addWeighted(sobel_x, 0.5, sobel_y, 0.5, 0)
+            result = cv2.threshold(result, self.threshold, 255, cv2.THRESH_BINARY)[1]
+        return result
 
 
     def draw_bounding_Box(self, frame, contour, box_cord, draw_contour=False):
