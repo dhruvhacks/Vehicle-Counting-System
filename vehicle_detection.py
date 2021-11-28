@@ -120,10 +120,10 @@ class vehicle_detection(object):
         This is the primary method to detect the motion between a old
         snapshot and current frame (separated by skip_steps number of frames)
         """
+        # Taking absolute differece of frames at skip_steps step.
         frameDeltaLast = cv2.absdiff(prev_frame, frame)
-        threshLast = cv2.threshold(frameDeltaLast, 25, 255, cv2.THRESH_BINARY)[1]
-        threshLast = cv2.dilate(threshLast, None, iterations=5)
-        contoursLast, hierL = cv2.findContours(threshLast.copy(), cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+        dilateLast = cv2.dilate(frameDeltaLast, None, iterations=5)
+        contoursLast, hierL = cv2.findContours(dilateLast.copy(), cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
         for ct in contoursLast:
             contour_area = cv2.contourArea(ct)
             (x, y, w, h) = cv2.boundingRect(ct)
