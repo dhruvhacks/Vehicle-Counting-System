@@ -1,5 +1,6 @@
 import cv2
 import numpy as np
+from KalmanFilter import KalmanFilter
 
 
 class vehicle_detection(object):
@@ -18,6 +19,8 @@ class vehicle_detection(object):
         self.replicate = replicate
         self.gamma = gamma
         self.threshold = binary_threshold
+        self.dist_threshold = 50
+        self.kfs = list()
 
 
     def region_selector(self, event, x, y, flags, param):
@@ -80,7 +83,6 @@ class vehicle_detection(object):
             cv2.destroyAllWindows()
 
 
-
     def pre_process_frame(self):
         """
         This method applies all the pre-processing steps on the
@@ -100,17 +102,19 @@ class vehicle_detection(object):
         return result
 
 
-    def draw_bounding_Box(self, frame, contour, box_cord, draw_contour=False):
+    def draw_bounding_Box(self, frame, contour, box_cord, color=(0,255,0), text="", draw_contour=False):
         """
         This method draws the bounding box on the frame at given
         locaiton.
         """
         x, y, w, h = box_cord
-        cv2.rectangle(frame, (x,y), (x+w,y+h), (0, 255, 0), 2)
+        cv2.rectangle(frame, (x,y), (x+w,y+h), color, 2)
+        cv2.putText(frame, text, (x, y), 0, 1, (0, 0, 255), 2)
         if draw_contour:
             cv2.drawContours(frame, contour,-1,(255,0,0),3)
-
-
+            
+        
+    
     def detect_motion(self, prev_frame, frame):
         """
         This is the primary method to detect the motion between a old
@@ -125,13 +129,42 @@ class vehicle_detection(object):
         for ct in contoursLast:
             contour_area = cv2.contourArea(ct)
             (x, y, w, h) = cv2.boundingRect(ct)
-            ct_area = contour_area / (h * w)
-            self.draw_bounding_Box(frame=self.frame,
-                                   contour=ct,
-                                   box_cord=(x, y, w, h))
-            if (ct_area < 0.01 or ct_area > 0.9) or (float(h) / w >= 1.8):
+            ct_area = h * w
+            #print("CT = ", ct_area)
+            if (ct_area < 2500) or (float(h) / w >= 1.8):
                 continue
-        cv2.imshow("Boxed frame", self.frame)
+            found = False
+            for i, p in enumerate(self.kfs):
+                d = np.linalg.norm(p[0]-np.array([x, y]))
+                print("d = ", d)
+                if d < self.dist_threshold:
+                    KF = p[1]
+                    (x1, y1) = KF.update(np.array([x, y]).reshape(-1, 1))
+                    x1, y1 = int(x1), int(y1)
+                    self.draw_bounding_Box(frame=self.frame,
+                                           contour=ct,
+                                           color = (0, 0, 0),
+                                           box_cord=(x1, y1, w, h))
+                    self.kfs[i][0] = np.array([x1, y1])
+                    self.kfs[i][1] = KF
+                    found = True
+                    break
+                
+            if not found:
+                KF = KalmanFilter(0.1, 1, 1, 1, 0.1, 0.1)
+                (xt, yt) = KF.update(np.array([x, y]).reshape(-1, 1))
+                self.kfs.append([np.array([x, y]), KF])
+            
+            self.draw_bounding_Box(frame=self.frame,
+                                    contour=ct,
+                                    color = (0, 255, 0),
+                                    text = ID,
+                                    box_cord=(x, y, w, h))
+                
+                
+            # self.draw_bounding_Box(frame=self.frame,
+            #                        contour=ct,
+            #                        box_cord=(x, y, w, h))
 
  
     def get_binary_image(self, frame_1, frame_2):
@@ -178,6 +211,10 @@ class vehicle_detection(object):
             # Detect motion with generated binary images
             self.detect_motion(bin_img_prev, bin_img_curr)
             
+            text = f"Total Count = {len(self.kfs)}"
+            cv2.putText(self.frame, text, (0, 15), 0, 1, (0, 0, 255), 2)
+            cv2.imshow("Boxed frame", self.frame)
+            
             # Move further one step.
             bin_img_prev = bin_img_curr.copy()
             prev_frame_ppr = frame_ppr.copy()
@@ -185,6 +222,8 @@ class vehicle_detection(object):
             if cv2.waitKey(100) == ord('q'):
                 print("Runner stopped")
                 break
+        self.cam.release()
+        cv2.destroyAllWindows()
 
 
     def modified_method(self):
@@ -199,9 +238,14 @@ class vehicle_detection(object):
             frame_ppr = self.pre_process_frame()
             self.detect_motion(prev_frame_ppr, frame_ppr)
             prev_frame_ppr = frame_ppr.copy()
-            if cv2.waitKey(100) == ord('q'):
+            text = f"Total Count = {len(self.kfs)}"
+            cv2.putText(self.frame, text, (0, 15), 0, 1, (0, 0, 255), 2)
+            cv2.imshow("Boxed frame", self.frame)
+            if cv2.waitKey(0) == ord('q'):
                 print("Runner stopped")
                 break
+        self.cam.release()
+        cv2.destroyAllWindows()
 
 
     def runner(self):
@@ -215,7 +259,7 @@ class vehicle_detection(object):
 
 
 if __name__ == "__main__":
-    vehicle_detection_obj = vehicle_detection(STREAM_URL="./data/3.mp4",
-                                              skip_steps=15)
+    vehicle_detection_obj = vehicle_detection(STREAM_URL="./data/clip2.mp4",
+                                              skip_steps=1)
     vehicle_detection_obj.configure(True, False)
     vehicle_detection_obj.runner()
