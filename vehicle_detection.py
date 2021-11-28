@@ -37,26 +37,22 @@ class vehicle_detection(object):
             self.first_click = True
             cv2.rectangle(self.frame, (self.box_builder[0], self.box_builder[1]), (x, y), (0, 255, 0), 2)
         if not self.first_click:
-            self.get_frame()
+            self.get_frame(smooth=True)
             cv2.rectangle(self.frame, (self.box_builder[0], self.box_builder[1]), (x, y), (255, 0, 0), 2)
 
 
-    def get_frame(self):
+    def get_frame(self, smooth=False):
         """
         Function to read the frames from the stream-object
         created as a class-member.
         """
+        count = 0
         frame = None
-        fail_count = 0
-        while True:
+        while count != self.skip_steps:
             frame = self.cam.read()[1]
-            if frame is None:
-                fail_count += 1
-                if fail_count == 100:
-                    print("Failed to read the frames multiple times")
-                    break
-                continue
-            break
+            if smooth:
+                break
+            count += 1
         self.frame = frame[min(self.crop_cord[1], self.crop_cord[3]):max(self.crop_cord[1], self.crop_cord[3]),
                            min(self.crop_cord[0], self.crop_cord[2]):max(self.crop_cord[0], self.crop_cord[2])]
 
@@ -163,27 +159,17 @@ class vehicle_detection(object):
         """
         Primary runner function to perform vehicle detection on Video Stream
         """
-        # Taking the first frame
-        count = 0
+        # Taking the first frame and pre-processing it
         self.get_frame()
-        # prev_frame_BGR = self.frame
-        
-        # Pre-processing the first frame.
         prev_prev_frame_ppr = self.pre_process_frame()
         
         # Obtain the second frame too and pre-process it.
-        while count != self.skip_steps:# First frame
-            self.get_frame()
-            count += 1
+        self.get_frame()
         prev_frame_ppr = self.pre_process_frame()
-        count = 0
         while True:
             # obtain the last frame.
-            while count != self.skip_steps: # second frame
-                self.get_frame()
-                count += 1
+            self.get_frame()
             frame_ppr = self.pre_process_frame()
-            count = 0
             
             # Do frame differentiation here.
             self.frame_diff(prev_prev_frame_ppr, prev_frame_ppr, frame_ppr)
