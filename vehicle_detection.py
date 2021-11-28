@@ -3,7 +3,7 @@ import numpy as np
 
 
 class vehicle_detection(object):
-    def __init__(self, STREAM_URL, skip_steps=15, gamma=0.4, binary_threshold = 25, replicate=False):
+    def __init__(self, STREAM_URL, skip_steps=15, replicate=False, gamma=1.2, binary_threshold = 25):
         """
         > a frame-stream object
         > frame object- keeping it central to entire class
@@ -37,26 +37,22 @@ class vehicle_detection(object):
             self.first_click = True
             cv2.rectangle(self.frame, (self.box_builder[0], self.box_builder[1]), (x, y), (0, 255, 0), 2)
         if not self.first_click:
-            self.get_frame()
+            self.get_frame(smooth=True)
             cv2.rectangle(self.frame, (self.box_builder[0], self.box_builder[1]), (x, y), (255, 0, 0), 2)
 
 
-    def get_frame(self):
+    def get_frame(self, smooth=False):
         """
         Function to read the frames from the stream-object
         created as a class-member.
         """
+        count = 0
         frame = None
-        fail_count = 0
-        while True:
+        while count != self.skip_steps:
             frame = self.cam.read()[1]
-            if frame is None:
-                fail_count += 1
-                if fail_count == 100:
-                    print("Failed to read the frames multiple times")
-                    break
-                continue
-            break
+            if smooth:
+                break
+            count += 1
         self.frame = frame[min(self.crop_cord[1], self.crop_cord[3]):max(self.crop_cord[1], self.crop_cord[3]),
                            min(self.crop_cord[0], self.crop_cord[2]):max(self.crop_cord[0], self.crop_cord[2])]
 
@@ -82,6 +78,7 @@ class vehicle_detection(object):
             self.cam = cv2.VideoCapture(self.STREAM_URL)
             self.crop_cord = self.box_builder.copy()
             cv2.destroyAllWindows()
+
 
 
     def pre_process_frame(self):
@@ -119,10 +116,12 @@ class vehicle_detection(object):
         This is the primary method to detect the motion between a old
         snapshot and current frame (separated by skip_steps number of frames)
         """
+        # Taking absolute differece of frames at skip_steps step.
         frameDeltaLast = cv2.absdiff(prev_frame, frame)
-        threshLast = cv2.threshold(frameDeltaLast, 25, 255, cv2.THRESH_BINARY)[1]
-        threshLast = cv2.dilate(threshLast, None, iterations=5)
-        contoursLast, hierL = cv2.findContours(threshLast.copy(), cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+        if not self.replicate:
+            frameDeltaLast = cv2.threshold(frameDeltaLast, self.threshold, 255, cv2.THRESH_BINARY)[1]
+            frameDeltaLast = cv2.dilate(frameDeltaLast, None, iterations=5)
+        contoursLast, hierL = cv2.findContours(frameDeltaLast.copy(), cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
         for ct in contoursLast:
             contour_area = cv2.contourArea(ct)
             (x, y, w, h) = cv2.boundingRect(ct)
@@ -134,26 +133,85 @@ class vehicle_detection(object):
                 continue
         cv2.imshow("Boxed frame", self.frame)
 
+ 
+    def get_binary_image(self, frame_1, frame_2):
+        """
 
-    def runner(self):
+        Parameters
+        ----------
+        frame_1 : pre-processed frame 1
+        frame_2 : pre-processsed frame 2
+
+        Returns
+        -------
+        Binary image which is the difference of pre-processed frames
+
         """
-        Primary runner function to perform vehicle detection on Video Stream
+        # Apply 'AND' operation to obtain the intersection of edgy binary frames.
+        bin_image = cv2.bitwise_and(frame_1, frame_2, mask = None)
+        return bin_image
+
+
+    def original_method(self):
         """
-        count = 0
+        This method triggers the vehicle detection based on sequence of steps
+        performed in the original work.
+        """
+        # Taking the first frame and pre-processing it
         self.get_frame()
-        prev_frame_BGR = self.frame
+        prev_prev_frame_ppr = self.pre_process_frame()
+        
+        # Obtain the second frame too and pre-process it.
+        self.get_frame()
+        prev_frame_ppr = self.pre_process_frame()
+
+        # Calculating the binary image for prev_frames
+        bin_img_prev = self.get_binary_image(prev_prev_frame_ppr, prev_frame_ppr)
+        while True:
+            # obtain the last frame.
+            self.get_frame()
+            frame_ppr = self.pre_process_frame()
+            
+            # Calculating the binary image for current frame
+            bin_img_curr = self.get_binary_image(prev_frame_ppr, frame_ppr)
+
+            # Detect motion with generated binary images
+            self.detect_motion(bin_img_prev, bin_img_curr)
+            
+            # Move further one step.
+            bin_img_prev = bin_img_curr.copy()
+            prev_frame_ppr = frame_ppr.copy()
+            
+            if cv2.waitKey(100) == ord('q'):
+                print("Runner stopped")
+                break
+
+
+    def modified_method(self):
+        """
+        This method triggers the vehicle detection based on the modified version
+        with different sequence of operations.
+        """
+        self.get_frame()
         prev_frame_ppr = self.pre_process_frame()
         while True:
-            while count != self.skip_steps:
-                self.get_frame()
-                count += 1
+            self.get_frame()
             frame_ppr = self.pre_process_frame()
-            count = 0
             self.detect_motion(prev_frame_ppr, frame_ppr)
             prev_frame_ppr = frame_ppr.copy()
             if cv2.waitKey(100) == ord('q'):
                 print("Runner stopped")
                 break
+
+
+    def runner(self):
+        """
+        Runner function to triggered the required pipeline
+        """
+        if self.replicate:
+            self.original_method()
+        else:
+            self.modified_method()
 
 
 if __name__ == "__main__":
