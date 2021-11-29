@@ -21,6 +21,13 @@ class vehicle_detection(object):
         self.threshold = binary_threshold
         self.dist_threshold = 50
         self.kfs = list()
+        self.t12 = 15000
+        self.t23 = 50000
+        self.t34 = 75000
+        self.type1 = 0
+        self.type2 = 0
+        self.type3 = 0
+        self.type4 = 0
 
 
     def region_selector(self, event, x, y, flags, param):
@@ -90,7 +97,6 @@ class vehicle_detection(object):
         """
         gray = cv2.cvtColor(self.frame, cv2.COLOR_BGR2GRAY)
         result = cv2.bilateralFilter(gray, 15, 75, 75)
-        # result = cv2.GaussianBlur(gray, (21, 21), 0)
         if self.replicate:
             gamma = np.power(255.0,1-self.gamma)
             gamma = np.float64(gamma)*result**(np.float64(self.gamma))
@@ -109,12 +115,47 @@ class vehicle_detection(object):
         """
         x, y, w, h = box_cord
         cv2.rectangle(frame, (x,y), (x+w,y+h), color, 2)
-        # cv2.putText(frame, text, (x, y), 0, 1, (0, 0, 255), 2)
         if draw_contour:
-            cv2.drawContours(frame, contour,-1,(255,0,0),3)
-            
-        
-    
+            cv2.drawContours(frame, contour, -1, (255,0,0), 3)
+
+
+    def update_types(self, area, mode = 1):
+        """
+        Parameters
+        ----------
+        area : TYPE: Integer
+             Area of bounding box.
+        mode : TYPE, optional
+             Specify if to add or subtract;The default is 1 for add.
+             And -1 for subtract.
+        Returns
+        -------
+        Updated Types of Vehicles
+        """
+        if area < self.t12:
+            self.type1 += mode
+        elif self.t12 <= area < self.t23:
+            self.type2 += mode
+        elif self.t23 <= area < self.t34:
+            self.type3 += mode
+        else:
+            self.type4 += mode
+
+
+    def get_types(self, ct_area, old_area):
+        """
+        Parameters
+        ----------
+        ct_area : Bounding Box Area
+        old_area : Old area for bounding box of that particular object.
+        Returns
+        -------------
+        Vehicle Types according to bounding box area.
+        """
+        self.update_types(old_area, mode=-1)
+        self.update_types(ct_area, mode=1)
+
+
     def detect_motion(self, prev_frame, frame):
         """
         This is the primary method to detect the motion between a old
@@ -130,13 +171,11 @@ class vehicle_detection(object):
             contour_area = cv2.contourArea(ct)
             (x, y, w, h) = cv2.boundingRect(ct)
             ct_area = h * w
-            #print("CT = ", ct_area)
             if (ct_area < 2500) or (float(h) / w >= 1.8):
                 continue
             found = False
             for i, p in enumerate(self.kfs):
                 d = np.linalg.norm(p[0]-np.array([x, y]))
-                print("d = ", d)
                 if d < self.dist_threshold:
                     min_idx = i
                     found = True
@@ -148,15 +187,18 @@ class vehicle_detection(object):
                                        contour=ct,
                                        color = (0, 0, 0),
                                        box_cord=(x1, y1, w, h))
-                self.kfs[i][0] = np.array([x1, y1])
-                self.kfs[i][1] = KF
+                self.kfs[min_idx][0] = np.array([x1, y1])
+                self.kfs[min_idx][1] = KF
+                print("CT = ", ct_area)
+                if ct_area > self.kfs[min_idx][2]:
+                    self.get_types(ct_area, self.kfs[min_idx][2])
+                    self.kfs[min_idx][2] = ct_area
             else:
                 KF = KalmanFilter(0.1, 1, 1, 1, 0.1, 0.1)
-                # if ct_area in this range --> assign the type of vehicle
-                # Then and there.
                 (xt, yt) = KF.update(np.array([x, y]).reshape(-1, 1))
-                self.kfs.append([np.array([x, y]), KF])#, vehicle_type
-            
+                self.update_types(ct_area, mode = 1)
+                self.kfs.append([np.array([x, y]), KF, ct_area])
+
             self.draw_bounding_Box(frame=self.frame,
                                     contour=ct,
                                     color = (0, 255, 0),
@@ -235,7 +277,15 @@ class vehicle_detection(object):
             self.detect_motion(prev_frame_ppr, frame_ppr)
             prev_frame_ppr = frame_ppr.copy()
             text = f"Total Count = {len(self.kfs)}"
-            cv2.putText(self.frame, text, (0, 15), 0, 1, (0, 0, 255), 2)
+            t1 = f"Type 1 = {self.type1}"
+            t2 = f"Type 2 = {self.type2}"
+            t3 = f"Type 3 = {self.type3}"
+            t4 = f"Type 4 = {self.type4}"
+            cv2.putText(self.frame, text, (0, 50), 0, 1, (0, 0, 255), 2)
+            cv2.putText(self.frame, t1, (0, 70), 0, 0.5, (0, 0, 255), 2)
+            cv2.putText(self.frame, t2, (0, 90), 0, 0.5, (0, 0, 255), 2)
+            cv2.putText(self.frame, t3, (0, 110), 0, 0.5, (0, 0, 255), 2)
+            cv2.putText(self.frame, t4, (0, 130), 0, 0.5, (0, 0, 255), 2)
             cv2.imshow("Boxed frame", self.frame)
             if cv2.waitKey(0) == ord('q'):
                 print("Runner stopped")
@@ -255,7 +305,7 @@ class vehicle_detection(object):
 
 
 if __name__ == "__main__":
-    vehicle_detection_obj = vehicle_detection(STREAM_URL="./data/clip2.mp4",
+    vehicle_detection_obj = vehicle_detection(STREAM_URL="./data/1.mp4",
                                               skip_steps=1)
     vehicle_detection_obj.configure(True, False)
     vehicle_detection_obj.runner()
