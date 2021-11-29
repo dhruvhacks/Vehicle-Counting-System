@@ -181,15 +181,10 @@ class vehicle_detection(object):
                     found = True
             if found:
                 KF = self.kfs[min_idx][1]
-                (x1, y1) = KF.update(np.array([x, y]).reshape(-1, 1))
-                x1, y1 = int(x1), int(y1)
-                self.draw_bounding_Box(frame=self.frame,
-                                       contour=ct,
-                                       color = (0, 0, 0),
-                                       box_cord=(x1, y1, w, h))
-                self.kfs[min_idx][0] = np.array([x1, y1])
+                (x, y) = KF.update(np.array([x, y]).reshape(-1, 1))
+                x, y = int(x), int(y)
+                self.kfs[min_idx][0] = np.array([x, y])
                 self.kfs[min_idx][1] = KF
-                print("CT = ", ct_area)
                 if ct_area > self.kfs[min_idx][2]:
                     self.get_types(ct_area, self.kfs[min_idx][2])
                     self.kfs[min_idx][2] = ct_area
