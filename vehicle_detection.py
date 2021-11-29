@@ -102,14 +102,14 @@ class vehicle_detection(object):
         return result
 
 
-    def draw_bounding_Box(self, frame, contour, box_cord, color=(0,255,0), text="", draw_contour=False):
+    def draw_bounding_Box(self, frame, contour, box_cord, color=(0,255,0), draw_contour=False):
         """
         This method draws the bounding box on the frame at given
         locaiton.
         """
         x, y, w, h = box_cord
         cv2.rectangle(frame, (x,y), (x+w,y+h), color, 2)
-        cv2.putText(frame, text, (x, y), 0, 1, (0, 0, 255), 2)
+        # cv2.putText(frame, text, (x, y), 0, 1, (0, 0, 255), 2)
         if draw_contour:
             cv2.drawContours(frame, contour,-1,(255,0,0),3)
             
@@ -138,33 +138,29 @@ class vehicle_detection(object):
                 d = np.linalg.norm(p[0]-np.array([x, y]))
                 print("d = ", d)
                 if d < self.dist_threshold:
-                    KF = p[1]
-                    (x1, y1) = KF.update(np.array([x, y]).reshape(-1, 1))
-                    x1, y1 = int(x1), int(y1)
-                    self.draw_bounding_Box(frame=self.frame,
-                                           contour=ct,
-                                           color = (0, 0, 0),
-                                           box_cord=(x1, y1, w, h))
-                    self.kfs[i][0] = np.array([x1, y1])
-                    self.kfs[i][1] = KF
+                    min_idx = i
                     found = True
-                    break
-                
-            if not found:
+            if found:
+                KF = self.kfs[min_idx][1]
+                (x1, y1) = KF.update(np.array([x, y]).reshape(-1, 1))
+                x1, y1 = int(x1), int(y1)
+                self.draw_bounding_Box(frame=self.frame,
+                                       contour=ct,
+                                       color = (0, 0, 0),
+                                       box_cord=(x1, y1, w, h))
+                self.kfs[i][0] = np.array([x1, y1])
+                self.kfs[i][1] = KF
+            else:
                 KF = KalmanFilter(0.1, 1, 1, 1, 0.1, 0.1)
+                # if ct_area in this range --> assign the type of vehicle
+                # Then and there.
                 (xt, yt) = KF.update(np.array([x, y]).reshape(-1, 1))
-                self.kfs.append([np.array([x, y]), KF])
+                self.kfs.append([np.array([x, y]), KF])#, vehicle_type
             
             self.draw_bounding_Box(frame=self.frame,
                                     contour=ct,
                                     color = (0, 255, 0),
-                                    text = ID,
                                     box_cord=(x, y, w, h))
-                
-                
-            # self.draw_bounding_Box(frame=self.frame,
-            #                        contour=ct,
-            #                        box_cord=(x, y, w, h))
 
  
     def get_binary_image(self, frame_1, frame_2):
