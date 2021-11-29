@@ -14,6 +14,7 @@ class vehicle_detection(object):
         self.STREAM_URL = STREAM_URL
         self.cam = cv2.VideoCapture(self.STREAM_URL)
         self.frame = None
+        self.bg = None
         self.skip_steps = skip_steps
         self.crop_cord = [1, 1, 100000, 100000]
         self.replicate = replicate
@@ -67,7 +68,7 @@ class vehicle_detection(object):
                            min(self.crop_cord[0], self.crop_cord[2]):max(self.crop_cord[0], self.crop_cord[2])]
 
 
-    def configure(self, region_selection=True, create_bg=False):
+    def configure(self, region_selection=True):
         """
         This method is executed before running the project in full capacity.
         Here, we can define a specific region as ROI for vehicle detection and
@@ -88,6 +89,26 @@ class vehicle_detection(object):
             self.cam = cv2.VideoCapture(self.STREAM_URL)
             self.crop_cord = self.box_builder.copy()
             cv2.destroyAllWindows()
+        if not self.replicate:
+            self.get_frame()
+            frame = np.float64(self.frame)
+            count = 0
+            while True:
+                self.get_frame(smooth=True)
+                cv2.accumulateWeighted(np.float64(self.frame), frame, 0.009)
+                frame_disp = cv2.convertScaleAbs(frame)
+                text = "(bg_selection) Keep any key pressed to create bg. Press q to end"
+                cv2.putText(frame_disp, text, (0,50), cv2.FONT_HERSHEY_SIMPLEX, 1, (0,0,255), 2)
+                cv2.imshow("BG Construction", frame_disp)
+                if cv2.waitKey(0) == ord('q'):
+                    break
+                count += 1
+            frame = cv2.convertScaleAbs(frame)
+            frame = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
+            frame = cv2.GaussianBlur(frame, (21, 21), 0)
+            self.bg = frame.copy()
+            self.cam = cv2.VideoCapture(self.STREAM_URL)
+            cv2.destroyAllWindows()
 
 
     def pre_process_frame(self):
@@ -95,9 +116,9 @@ class vehicle_detection(object):
         This method applies all the pre-processing steps on the
         frame required for optimum performance.
         """
-        gray = cv2.cvtColor(self.frame, cv2.COLOR_BGR2GRAY)
-        result = cv2.bilateralFilter(gray, 15, 75, 75)
+        result = cv2.cvtColor(self.frame, cv2.COLOR_BGR2GRAY)
         if self.replicate:
+            result = cv2.bilateralFilter(result, 15, 75, 75)
             gamma = np.power(255.0,1-self.gamma)
             gamma = np.float64(gamma)*result**(np.float64(self.gamma))
             gamma = np.uint8(gamma)
@@ -105,6 +126,8 @@ class vehicle_detection(object):
             sobel_y = cv2.Sobel(result, cv2.CV_8U, 0, 1, ksize=3)
             result = cv2.addWeighted(sobel_x, 0.5, sobel_y, 0.5, 0)
             result = cv2.threshold(result, self.threshold, 255, cv2.THRESH_BINARY)[1]
+        else:
+            result = cv2.GaussianBlur(result, (21, 21), 0)
         return result
 
 
@@ -264,13 +287,10 @@ class vehicle_detection(object):
         This method triggers the vehicle detection based on the modified version
         with different sequence of operations.
         """
-        self.get_frame()
-        prev_frame_ppr = self.pre_process_frame()
         while True:
             self.get_frame()
             frame_ppr = self.pre_process_frame()
-            self.detect_motion(prev_frame_ppr, frame_ppr)
-            prev_frame_ppr = frame_ppr.copy()
+            self.detect_motion(self.bg.copy(), frame_ppr)
             text = f"Total Count = {len(self.kfs)}"
             t1 = f"Type 1 = {self.type1}"
             t2 = f"Type 2 = {self.type2}"
@@ -300,7 +320,7 @@ class vehicle_detection(object):
 
 
 if __name__ == "__main__":
-    vehicle_detection_obj = vehicle_detection(STREAM_URL="./data/1.mp4",
+    vehicle_detection_obj = vehicle_detection(STREAM_URL="./data/6.mp4",
                                               skip_steps=1)
-    vehicle_detection_obj.configure(True, False)
+    vehicle_detection_obj.configure(True)
     vehicle_detection_obj.runner()
