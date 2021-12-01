@@ -4,7 +4,7 @@ from KalmanFilter import KalmanFilter
 
 
 class vehicle_detection(object):
-    def __init__(self, STREAM_URL, skip_steps=15, replicate=False, gamma=1.2, cutoff=5000):
+    def __init__(self, STREAM_URL, skip_steps=15, replicate=False, cutoff=5000, thresh_low=15000, thresh_mid=35000, thresh_high=75000):
         """
         > a frame-stream object
         > frame object- keeping it central to entire class
@@ -18,13 +18,12 @@ class vehicle_detection(object):
         self.skip_steps = skip_steps
         self.crop_cord = [1, 1, 100000, 100000]
         self.replicate = replicate
-        self.gamma = gamma
         self.cutoff = cutoff
         self.dist_threshold = 50
         self.vehicles = list()
-        self.t12 = 15000
-        self.t23 = 50000
-        self.t34 = 75000
+        self.thresh_low = thresh_low
+        self.thresh_mid = thresh_mid
+        self.thresh_high = thresh_high
         self.type1_count = 0
         self.type2_count = 0
         self.type3_count = 0
@@ -151,11 +150,11 @@ class vehicle_detection(object):
         -------
         Updated Types of Vehicles
         """
-        if area < self.t12:
+        if area < self.thresh_low:
             self.type1_count += mode
-        elif self.t12 <= area < self.t23:
+        elif self.thresh_low <= area < self.thresh_mid:
             self.type2_count += mode
-        elif self.t23 <= area < self.t34:
+        elif self.thresh_mid <= area < self.thresh_high:
             self.type3_count += mode
         else:
             self.type4_count += mode
@@ -267,7 +266,7 @@ class vehicle_detection(object):
             # bin_img_prev = bin_img_curr.copy()
             prev_frame_ppr = frame_ppr.copy()
 
-            if cv2.waitKey(0) == ord('q'):
+            if cv2.waitKey(50) == ord('q'):
                 print("Runner stopped")
                 break
         self.cam.release()
@@ -294,7 +293,7 @@ class vehicle_detection(object):
             cv2.putText(self.frame, t3, (0, 110), 0, 0.5, (0, 0, 255), 2)
             cv2.putText(self.frame, t4, (0, 130), 0, 0.5, (0, 0, 255), 2)
             cv2.imshow("Boxed frame", self.frame)
-            if cv2.waitKey(0) == ord('q'):
+            if cv2.waitKey(50) == ord('q'):
                 print("Runner stopped")
                 break
         self.cam.release()
@@ -312,7 +311,7 @@ class vehicle_detection(object):
 
 
 if __name__ == "__main__":
-    vehicle_detection_obj = vehicle_detection(STREAM_URL="./data/6.mp4",
+    vehicle_detection_obj = vehicle_detection(STREAM_URL="./data/4.mp4",
                                               skip_steps=1,
                                               replicate=False)
     vehicle_detection_obj.configure(True)
