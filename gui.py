@@ -24,11 +24,11 @@ class gui(object):
     def config(self):
         self.vehicle_det_obj = vhd.vehicle_detection(STREAM_URL="./data/{clip}.mp4".format(clip=self.selectClip.get()),
                                                      skip_steps=self.skip_steps.get(),
-                                                     replicate=self.replicate,
-                                                     cutoff=self.cutoff,
-                                                     thresh_low=self.threshold_lower,
-                                                     thresh_mid=self.threshold_middle,
-                                                     thresh_high=self.threshold_higher
+                                                     replicate=self.replicate.get(),
+                                                     cutoff=self.cutoff.get(),
+                                                     thresh_low=self.threshold_lower.get(),
+                                                     thresh_mid=self.threshold_middle.get(),
+                                                     thresh_high=self.threshold_higher.get()
                                                      )
         self.vehicle_det_obj.configure(True)
 
