@@ -117,7 +117,16 @@ $ python gui.py
 
 ## Our Results
 
-### Confusion Matrix for method mentioned in paper.
+### For method mentioned in paper.
+
+#### DETECTION TEST RESULTS
+
+| Actual vehicle passed | Counted number of vehicles by the method | Number of errors |
+|-----------------------|------------------------------------------|------------------|
+| 44                    | 58                                       | 18.18%           |
+
+#### Confusion Matrix
+
 | CF Matrix | Type 1 | Type 2 | Type 3 | Type 4 |
 |-----------|--------|--------|--------|--------|
 | Type 1    | 1      | 0      | 0      | 0      |
@@ -126,7 +135,16 @@ $ python gui.py
 | Type 4    | 0      | 0      | 2      | 3      |
 | Noises    | 8      | 0      | 0      | 0      |                   
 
-### Confusion Matrix for modified (our) method.
+### For modified (our) method.
+
+#### DETECTION TEST RESULTS
+
+| Actual vehicle passed | Counted number of vehicles by the method | Number of errors |
+|-----------------------|------------------------------------------|------------------|
+| 44                    | 42                                       | 4.54%            |
+
+#### Confusion Matrix
+
 | CF Matrix | Type 1 | Type 2 | Type 3 | Type 4 |
 |-----------|--------|--------|--------|--------|
 | Type 1    | 0      | 0      | 0      | 0      |
