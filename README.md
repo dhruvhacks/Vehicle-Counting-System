@@ -9,6 +9,13 @@
 3. Dhruv Srivastava - 2021701021
 4. Prateek Jaiswal - 2021701009
 
+## Quick links
+1. [Overview](#overview)
+2. [Directory Structure](#directory-structure)
+3. [Instructions](#instructions-to-run-the-project-and-replicate-the-results)
+4. [Results](#our-results)
+5. [Dependencies](#dependencies)
+
 ## Overview
 
 The aim is to design a **vehicle detection and counter** using a combination of different video-image processing methods including object detection, edge detection, frame differentiation, and Kalman filtering. \
@@ -16,12 +23,15 @@ The presented code includes implementation with two different approaches-
 - Using previous frames for motion detection as proposed in [link](https://ieeexplore.ieee.org/document/7161621)
 - Constructing a background using moving-averaging and using it to detect motion from current frames.
 
-Using automated methods, one can execute better traffic management methods, such as changing the timings of traffic lights based on traffic flow, traffic survilance, etc. We’ll mainly focus on vehicle detection on roadways and classify the passing vehicles in different specific types.
+Using automated methods, one can execute better traffic management methods, such as changing the timings of traffic lights based on traffic flow, traffic surveillance, etc. We’ll mainly focus on vehicle detection on roadways and classify the passing vehicles in different specific types. The video data used for this project can be downloaded from [here](https://drive.google.com/drive/folders/15gR9uQ_g_oVaI7E9a7ZXU-wh7msEZT-x?usp=sharing).
 
 ## Flow chart of proposed improved method
 
 ![flow_chart](./images/flow_chart.png)
 
+ Paper Method | Improved Method 
+:--------------:|:-----------------
+![paper_method](./images/paper_method.gif)  |  ![improved_method](./images/improved_method.gif)
 
 ## Directory Structure
 ```
@@ -76,12 +86,11 @@ pip install -r requirements.txt
 ```
 $ python gui.py
 ```
+![gui](./images/gui.jpg)
 
 ### 4. Instructions to operate the `GUI.py`.
 1. In `Clip Selection Menu` choose one clip on which you want to perform vehicle tracking. (*Clip x* is a short video from a traffic camera, where each video is different from other.)
-2. `Create Dynamic Background` option: 
-    1. Setting `True` flag allows one to manually select the **ROI** (Region of Interest) or detection zone by *dragging the mouse followed by pressing `q` for confirming the region selected*.
-    2. Whereas `False` flag denotes the whole frame to be selected as *Detection zone*.
+2. `Create Dynamic Background` option: Allows one to manually select the **ROI** (Region of Interest) or detection zone by *dragging the mouse followed by pressing `q` for confirming the region selected*.<br><br>![dynamic_bg](./images/region_selection.gif)
 3. `Paper Replicate` option:
     1. If `True` then one will be reproducing the results from paper.
         1. Video frames Preprocessing:
@@ -94,7 +103,7 @@ $ python gui.py
             5. For each moving vehicle a `KalmanFilter` object is assigned (which also acts as it's `ID`) to track and estimate it's position (or co-ordinate) as well as minimize noise disorders. Although edge detection can find moving objects, the Kalman filter makes an optimal estimate of positions based on a sequence of localization measurement.
             6. Now the total counts of such `ID` (which is a `list` consisting of vehicle's position info, `KalmanFilter` object, and its bounding box area) will not only give us the total count of vehicles passed but also which type of vehicles have passed using bounding box's area information.
     2. Else, we'll be using our own `Modified Method`.
-        1. Constructed a '*static*' backgorund using `Moving Average` method.
+        1. Constructed a '*static*' backgorund using `Moving Average` method.<br><br>![bg_creation](./images/bg_creation.gif)
         2. Video frames Preprocessing: Applied `GrayScale` conversion followed by `GaussianFiltering` to smoothen out the artefacts and unnecessary noises.
         3. Execute **background subtraction** by taking absolute difference (`cv2.absdiff()`) between current video frame and static background.
         4. `Thresholding` followed by `Dilation` ensures that the (disconnected components of) moving vehicle in obtained binary image comes out as a single "white blob" (or component).
@@ -108,6 +117,24 @@ $ python gui.py
 
 ## Our Results
 
+### Confusion Matrix for method mentioned in paper.
+| CF Matrix | Type 1 | Type 2 | Type 3 | Type 4 |
+|-----------|--------|--------|--------|--------|
+| Type 1    | 1      | 0      | 0      | 0      |
+| Type 2    | 2      | 25     | 0      | 0      |
+| Type 3    | 0      | 1      | 10     | 0      |
+| Type 4    | 0      | 0      | 2      | 3      |
+| Noises    | 8      | 0      | 0      | 0      |                   
+
+### Confusion Matrix for modified (our) method.
+| CF Matrix | Type 1 | Type 2 | Type 3 | Type 4 |
+|-----------|--------|--------|--------|--------|
+| Type 1    | 0      | 0      | 0      | 0      |
+| Type 2    | 1      | 28     | 0      | 0      |
+| Type 3    | 0      | 0      | 10     | 0      |
+| Type 4    | 0      | 0      | 0      | 3      |
+| Noises    | 0      | 0      | 0      | 0      |
+
 ## Dependencies
 ```
 cycler==0.11.0
@@ -119,5 +146,5 @@ Pillow==8.4.0
 pyparsing==3.0.6
 python-dateutil==2.8.2
 six==1.16.0
-tkinter==8.6
+tkinter==0.1.0
 ```
