@@ -86,7 +86,7 @@ pip install -r requirements.txt
 ```
 $ python gui.py
 ```
-![gui](./images/gui.jpg)
+![gui](./images/GUI.jpg)
 
 ### 4. Instructions to operate the `GUI.py`.
 1. In `Clip Selection Menu` choose one clip on which you want to perform vehicle tracking. (*Clip x* is a short video from a traffic camera, where each video is different from other.)
