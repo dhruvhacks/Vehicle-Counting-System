@@ -13,6 +13,7 @@ class gui(object):
         self.threshold_lower = None
         self.threshold_middle = None
         self.threshold_higher = None
+        self.replicate = None
         self.default_thresholds = [[[1, 2, 3], [4, 5, 6], [7, 8, 9], [10, 11, 12], [13, 14, 15]],
                                   [[16, 17, 18], [19, 20, 21], [22, 23, 24], [25, 26, 27], [28, 29, 30]]]
 
@@ -22,7 +23,13 @@ class gui(object):
 
     def config(self):
         self.vehicle_det_obj = vhd.vehicle_detection(STREAM_URL="./data/{clip}.mp4".format(clip=self.selectClip.get()),
-                                                skip_steps=self.skip_steps.get())
+                                                     skip_steps=self.skip_steps.get(),
+                                                     replicate=self.replicate,
+                                                     cutoff=self.cutoff,
+                                                     thresh_low=self.threshold_lower,
+                                                     thresh_mid=self.threshold_middle,
+                                                     thresh_high=self.threshold_higher
+                                                     )
         self.vehicle_det_obj.configure(True)
 
 
