@@ -56,6 +56,7 @@ Using automated methods, one can execute better traffic management methods, such
     └── sobel_edge_det_issue.png
 ├── KalmanFilter.py
 ├── gui.py
+├── project_ppt.pptx
 ├── requirements.txt
 ├── runner.py
 ├── vehicle_detection.py
@@ -117,24 +118,6 @@ $ python gui.py
 
 ## Our Results
 
-### For method mentioned in paper.
-
-#### DETECTION TEST RESULTS
-
-| Actual vehicle passed | Counted number of vehicles by the method | Number of errors |
-|-----------------------|------------------------------------------|------------------|
-| 44                    | 58                                       | 18.18%           |
-
-#### Confusion Matrix
-
-| CF Matrix | Type 1 | Type 2 | Type 3 | Type 4 |
-|-----------|--------|--------|--------|--------|
-| Type 1    | 1      | 0      | 0      | 0      |
-| Type 2    | 2      | 25     | 0      | 0      |
-| Type 3    | 0      | 1      | 10     | 0      |
-| Type 4    | 0      | 0      | 2      | 3      |
-| Noises    | 8      | 0      | 0      | 0      |                   
-
 ### For modified (our) method.
 
 #### DETECTION TEST RESULTS
@@ -153,6 +136,25 @@ $ python gui.py
 | Type 4    | 0      | 0      | 0      | 3      |
 | Noises    | 0      | 0      | 0      | 0      |
 
+### For method mentioned in paper.
+
+#### DETECTION TEST RESULTS
+
+| Actual vehicle passed | Counted number of vehicles by the method | Number of errors |
+|-----------------------|------------------------------------------|------------------|
+| 44                    | 58                                       | 18.18%           |
+
+#### Confusion Matrix
+
+| CF Matrix | Type 1 | Type 2 | Type 3 | Type 4 |
+|-----------|--------|--------|--------|--------|
+| Type 1    | 1      | 0      | 0      | 0      |
+| Type 2    | 2      | 25     | 0      | 0      |
+| Type 3    | 0      | 1      | 10     | 0      |
+| Type 4    | 0      | 0      | 2      | 3      |
+| Noises    | 8      | 0      | 0      | 0      |                   
+
+
 ## Dependencies
 ```
 cycler==0.11.0
@@ -164,5 +166,5 @@ Pillow==8.4.0
 pyparsing==3.0.6
 python-dateutil==2.8.2
 six==1.16.0
-tkinter==0.1.0
+tk==0.1.0
 ```
