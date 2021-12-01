@@ -117,7 +117,7 @@ class vehicle_detection(object):
         """
         result = cv2.cvtColor(self.frame, cv2.COLOR_BGR2GRAY)
         if self.replicate:
-            result = (((result/255.0)**np.float(self.gamma))*255).astype(np.uint8)
+            result = (((result/255.0)**(1.2))*255).astype(np.uint8)
             # sobel_x = cv2.Sobel(result, cv2.CV_8U, 1, 0, ksize=3)
             # sobel_y = cv2.Sobel(result, cv2.CV_8U, 0, 1, ksize=3)
             # result = cv2.addWeighted(sobel_x, 0.5, sobel_y, 0.5, 0)
