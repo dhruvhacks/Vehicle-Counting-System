@@ -117,17 +117,15 @@ class vehicle_detection(object):
         frame required for optimum performance.
         """
         result = cv2.cvtColor(self.frame, cv2.COLOR_BGR2GRAY)
+        result = cv2.GaussianBlur(result, (21, 21), 0)
         if self.replicate:
-            result = cv2.bilateralFilter(result, 15, 75, 75)
             gamma = np.power(255.0,1-self.gamma)
             gamma = np.float64(gamma)*result**(np.float64(self.gamma))
-            gamma = np.uint8(gamma)
-            sobel_x = cv2.Sobel(result, cv2.CV_8U, 1, 0, ksize=3)
-            sobel_y = cv2.Sobel(result, cv2.CV_8U, 0, 1, ksize=3)
-            result = cv2.addWeighted(sobel_x, 0.5, sobel_y, 0.5, 0)
-            result = cv2.threshold(result, self.threshold, 255, cv2.THRESH_BINARY)[1]
-        else:
-            result = cv2.GaussianBlur(result, (21, 21), 0)
+            result = np.uint8(gamma)
+            # sobel_x = cv2.Sobel(result, cv2.CV_8U, 1, 0, ksize=3)
+            # sobel_y = cv2.Sobel(result, cv2.CV_8U, 0, 1, ksize=3)
+            # result = cv2.addWeighted(sobel_x, 0.5, sobel_y, 0.5, 0)
+            # result = cv2.threshold(result, self.threshold, 255, cv2.THRESH_BINARY)[1]
         return result
 
 
@@ -186,9 +184,8 @@ class vehicle_detection(object):
         """
         # Taking absolute differece of frames at skip_steps step.
         frameDeltaLast = cv2.absdiff(prev_frame, frame)
-        if not self.replicate:
-            frameDeltaLast = cv2.threshold(frameDeltaLast, self.threshold, 255, cv2.THRESH_BINARY)[1]
-            frameDeltaLast = cv2.dilate(frameDeltaLast, None, iterations=5)
+        frameDeltaLast = cv2.threshold(frameDeltaLast, self.threshold, 255, cv2.THRESH_BINARY)[1]
+        frameDeltaLast = cv2.dilate(frameDeltaLast, None, iterations=5)
         contoursLast, hierL = cv2.findContours(frameDeltaLast.copy(), cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
         for ct in contoursLast:
             contour_area = cv2.contourArea(ct)
@@ -222,60 +219,51 @@ class vehicle_detection(object):
                                     color = (0, 255, 0),
                                     box_cord=(x, y, w, h))
 
- 
-    def get_binary_image(self, frame_1, frame_2):
-        """
-
-        Parameters
-        ----------
-        frame_1 : pre-processed frame 1
-        frame_2 : pre-processsed frame 2
-
-        Returns
-        -------
-        Binary image which is the difference of pre-processed frames
-
-        """
-        # Apply 'AND' operation to obtain the intersection of edgy binary frames.
-        bin_image = cv2.bitwise_and(frame_1, frame_2, mask = None)
-        return bin_image
-
 
     def original_method(self):
         """
         This method triggers the vehicle detection based on sequence of steps
         performed in the original work.
         """
-        # Taking the first frame and pre-processing it
-        self.get_frame()
-        prev_prev_frame_ppr = self.pre_process_frame()
-        
-        # Obtain the second frame too and pre-process it.
+        ### Taking the first frame and pre-processing it
+        # self.get_frame()
+        # prev_prev_frame_ppr = self.pre_process_frame()
+
+        ### Obtain the second frame too and pre-process it.
         self.get_frame()
         prev_frame_ppr = self.pre_process_frame()
 
-        # Calculating the binary image for prev_frames
-        bin_img_prev = self.get_binary_image(prev_prev_frame_ppr, prev_frame_ppr)
+        ### Calculating the binary image for prev_frames
+        # bin_img_prev = cv2.bitwise_and(prev_prev_frame_ppr, prev_frame_ppr, mask=None)
         while True:
-            # obtain the last frame.
+            ### obtain the last frame.
             self.get_frame()
             frame_ppr = self.pre_process_frame()
-            
-            # Calculating the binary image for current frame
-            bin_img_curr = self.get_binary_image(prev_frame_ppr, frame_ppr)
 
-            # Detect motion with generated binary images
-            self.detect_motion(bin_img_prev, bin_img_curr)
-            
+            ### Calculating the binary image for current frame
+            # bin_img_curr = cv2.bitwise_and(prev_frame_ppr, frame_ppr, mask=None)
+
+            ### Detect motion with generated binary images
+            # self.detect_motion(bin_img_prev, bin_img_curr)
+            self.detect_motion(prev_frame_ppr, frame_ppr)
+
             text = f"Total Count = {len(self.kfs)}"
-            cv2.putText(self.frame, text, (0, 15), 0, 1, (0, 0, 255), 2)
-            cv2.imshow("Boxed frame", self.frame)
-            
-            # Move further one step.
-            bin_img_prev = bin_img_curr.copy()
+            t1 = f"Type 1 = {self.type1}"
+            t2 = f"Type 2 = {self.type2}"
+            t3 = f"Type 3 = {self.type3}"
+            t4 = f"Type 4 = {self.type4}"
+            cv2.putText(self.frame, text, (0, 50), 0, 1, (0, 0, 255), 2)
+            cv2.putText(self.frame, t1, (0, 70), 0, 0.5, (0, 0, 255), 2)
+            cv2.putText(self.frame, t2, (0, 90), 0, 0.5, (0, 0, 255), 2)
+            cv2.putText(self.frame, t3, (0, 110), 0, 0.5, (0, 0, 255), 2)
+            cv2.putText(self.frame, t4, (0, 130), 0, 0.5, (0, 0, 255), 2)
+            cv2.imshow("Vehicle Counting Live", self.frame)
+
+            ### Move further one step.
+            # bin_img_prev = bin_img_curr.copy()
             prev_frame_ppr = frame_ppr.copy()
-            
-            if cv2.waitKey(100) == ord('q'):
+
+            if cv2.waitKey(50) == ord('q'):
                 print("Runner stopped")
                 break
         self.cam.release()
@@ -321,6 +309,7 @@ class vehicle_detection(object):
 
 if __name__ == "__main__":
     vehicle_detection_obj = vehicle_detection(STREAM_URL="./data/6.mp4",
-                                              skip_steps=1)
+                                              skip_steps=1,
+                                              replicate=False)
     vehicle_detection_obj.configure(True)
     vehicle_detection_obj.runner()
