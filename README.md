@@ -30,11 +30,15 @@ Using automated methods, one can execute better traffic management methods, such
     ├── 2.mp4
     ├── 3.mp4
     ├── 4.mp4
-    ├── 5.mp4
-    ├── 6.mp4
-    └── 7.mp4
+    └── 5.mp4
 ├── images
+    ├── 1.gif
+    ├── 2.gif
+    ├── 3.gif
+    ├── 4.gif
+    ├── 5.gif
     ├── bg_creation.gif
+    ├── flow_chart.gif
     ├── kalman_filter.gif
     ├── prev_prev_frame_issue.png
     ├── region_selection.gif
