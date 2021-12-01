@@ -11,8 +11,17 @@
 
 ## Overview
 
-The aim is to design a **vehicle counter-classifier** using a combination of different video-image processing methods including object detection, edge detection, frame differentiation, and the Kalman filter. Using this useful information one can execute better traffic management methods, such as changing the timings of traffic lights based on traffic flow. We’ll mainly focus on vehicle detection on roadways and classify the passing vehicles in different specific types.<br><br>
+The aim is to design a **vehicle detection and counter** using a combination of different video-image processing methods including object detection, edge detection, frame differentiation, and Kalman filtering. \
+The presented code includes implementation with two different approaches-
+- Using previous frames for motion detection as proposed in [link](https://ieeexplore.ieee.org/document/7161621)
+- Constructing a background using moving-averaging and using it to detect motion from current frames.
+
+Using automated methods, one can execute better traffic management methods, such as changing the timings of traffic lights based on traffic flow, traffic survilance, etc. We’ll mainly focus on vehicle detection on roadways and classify the passing vehicles in different specific types.
+
+## Flow chart of proposed improved method
+
 ![flow_chart](./images/flow_chart.png)
+
 
 ## Directory Structure
 ```
